@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Websocket Test</string>
+    <string name="settings">Open settings</string>
+    <string name="port">Port</string>
+    <string name="host">Host</string>
+    <string name="saveSettings">Save settings</string>
+    <string name="Settings">Settings</string>
+    <string name="preference_file_key">com.garlic.websockettest.PREFERENCE_FILE_KEY</string>
+</resources>
