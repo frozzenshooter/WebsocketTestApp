@@ -25,4 +25,9 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
     }
+
+    public void openMessageOverview(View view) {
+        Intent intent = new Intent(this, MessageOverviewActivity.class);
+        startActivity(intent);
+    }
 }
