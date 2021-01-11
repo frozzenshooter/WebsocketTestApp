@@ -4,10 +4,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import java.io.IOException;
-import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -84,7 +81,7 @@ public class WebSocketConnection extends WebSocketListener {
     public synchronized void onMessage(WebSocket webSocket, ByteString bytes) {
 
         String text = bytes.toByteArray().toString();
-        Log.i(TAG, "onMessage("+text+")");
+        Log.i(TAG, "onMessage("+text+") - from Bytes");
     }
 
     @Override

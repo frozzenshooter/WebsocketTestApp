@@ -25,21 +25,29 @@ import com.garlic.websockettest.R;
 import com.garlic.websockettest.SettingsActivity;
 import com.garlic.websockettest.websockets.WebSocketConnection;
 
-public class MessageObserver{
+public class MessageObserver implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     public  static final  int FOREGROUND_ID = 313399;
 
     private static final String TAG = MessageObserver.class.getSimpleName();
     private final Application context;
     private boolean appVisible;
+    private volatile boolean networkLost;
+
+    private MessageRetrievalThread messageRetrievalThread = null;
 
 
     public MessageObserver(@NonNull Application context){
 
         this.context = context;
 
+        SharedPreferences sharedPref = context.getSharedPreferences(context.getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        sharedPref.registerOnSharedPreferenceChangeListener(this);
+
+        String uri = getUri(sharedPref);
+
         // Start thread which will use the websocket connection to receive messages
-        new MessageRetrievalThread().start();
+        restartMessageRetrievalThread(uri);
 
         // Foreground service in order to secure that android won't shutdown the background process
         ContextCompat.startForegroundService(context, new Intent(context, MessageObserver.ForegroundService.class));
@@ -107,14 +115,46 @@ public class MessageObserver{
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
+        if(key.equalsIgnoreCase(SettingsActivity.HOST) || key.equalsIgnoreCase(SettingsActivity.PORT))
+        {
+            String uri = getUri(sharedPreferences);
+            restartMessageRetrievalThread(uri);
+        }
+    }
+
+    private void restartMessageRetrievalThread(String uri) {
+        if(messageRetrievalThread != null){
+            messageRetrievalThread.uri = uri;
+            messageRetrievalThread.wasUpdated = true;
+        }else{
+            this.messageRetrievalThread = new MessageRetrievalThread(uri);
+            this.messageRetrievalThread.start();
+        }
+    }
+
+    private String getUri(SharedPreferences sharedPref){
+        String port = sharedPref.getString(SettingsActivity.PORT, "8888");
+        String host = sharedPref.getString(SettingsActivity.HOST, "localhost");
+
+        //return "ws://192.168.2.100:8765";
+        return "ws://"+host+":"+port;
+    }
+
     /**
      * Thread to retrieve messages from the websocket
      */
     private class MessageRetrievalThread extends Thread  implements Thread.UncaughtExceptionHandler{
+        public volatile boolean wasUpdated;
+        public volatile String uri;
 
-        MessageRetrievalThread() {
+        MessageRetrievalThread(String uri) {
             super("MessageRetrievalService");
             setUncaughtExceptionHandler(this);
+            this.wasUpdated = false;
+            this.uri = uri;
         }
 
         @Override
@@ -125,12 +165,13 @@ public class MessageObserver{
                 waitForConnectionPossible();
 
                 Log.i(TAG, "Making websocket connection....");
-                WebSocketConnection websocket = new WebSocketConnection("ws://192.168.2.100:8765");
+                WebSocketConnection websocket = new WebSocketConnection(this.uri);
                 websocket.connect();
+                this.wasUpdated = false;
 
                 try {
-                    while (hasNetwork()) {
-
+                    while (hasNetwork() && !this.wasUpdated) {
+                        // do nothing (the websocket listener will retrieve messages in the background)
                     }
                 } catch (Throwable e) {
                     Log.w(TAG, e);

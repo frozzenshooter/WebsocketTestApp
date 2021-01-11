@@ -16,6 +16,11 @@ import androidx.lifecycle.LifecycleOwner;
 import com.garlic.websockettest.messages.MessageHandler;
 import com.garlic.websockettest.messages.MessageObserver;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
  * This class extends the {@android.app.Application} class to guarantee that all dependencies are initialized
@@ -28,6 +33,7 @@ public class ApplicationContext extends Application  {
 
     private static volatile MessageObserver messageObserver;
     private static volatile MessageHandler messageHandler;
+    public static volatile ExecutorService executorService;
 
     /**
      * Returns the ApplicationContext of the Application
@@ -46,11 +52,16 @@ public class ApplicationContext extends Application  {
         // Needed to be able to display the foreground service
         this.createNotificationChannel();
 
-        //TODO: probably better to use a threat to do this
         //initalize the observer for the websocket notifications
-        this.initializeMessageRetrieval();
+
+        this.executorService = Executors.newFixedThreadPool(getIdealThreadCount(), new NumberedThreadFactory("bounded"));
+        executorService.execute(this::initializeMessageRetrieval);
 
         Log.d(TAG, "onCreate() from ("+ TAG +") took " + (System.currentTimeMillis() - startTime) + " ms");
+    }
+
+    public static int getIdealThreadCount() {
+        return Math.max(2, Math.min(Runtime.getRuntime().availableProcessors() - 1, 4));
     }
 
     public void initializeMessageRetrieval(){
@@ -85,6 +96,22 @@ public class ApplicationContext extends Application  {
             NotificationChannel serviceChannel = new NotificationChannel(CHANNEL_ID, "my_channel", NotificationManager.IMPORTANCE_DEFAULT);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(serviceChannel);
+        }
+    }
+
+    private static class NumberedThreadFactory implements ThreadFactory {
+
+        private final String        baseName;
+        private final AtomicInteger counter;
+
+        NumberedThreadFactory(@NonNull String baseName) {
+            this.baseName = baseName;
+            this.counter  = new AtomicInteger();
+        }
+
+        @Override
+        public Thread newThread(@NonNull Runnable r) {
+            return new Thread(r, baseName + "-" + counter.getAndIncrement());
         }
     }
 }

@@ -65,7 +65,7 @@ public class SettingsActivity extends AppCompatActivity {
     public void saveSettings(View view) {
         updateSettings();
 
-        SharedPreferences sharedPref = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);;
+        SharedPreferences sharedPref = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
         editor.putString(PORT, port);
