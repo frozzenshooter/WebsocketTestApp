@@ -57,6 +57,7 @@ public class MessageOverviewActivity extends AppCompatActivity {
     }
 
     private void refreshMessages(){
+
         this.toast("Refresh");
     }
 
