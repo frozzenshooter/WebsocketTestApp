@@ -1,20 +1,30 @@
 package com.garlic.websockettest.messages;
 
 import android.app.Application;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
+import com.garlic.websockettest.ApplicationContext;
+import com.garlic.websockettest.R;
+
 public class MessageObserver {
+
+    public  static final  int FOREGROUND_ID = 313399;
 
     private static final String TAG = MessageObserver.class.getSimpleName();
     private final Application context;
@@ -26,6 +36,8 @@ public class MessageObserver {
 
         // Start thread which will use the websocket connection to receive messages
         new MessageRetrievalThread().start();
+
+        ContextCompat.startForegroundService(context, new Intent(context, MessageObserver.ForegroundService.class));
 
         ProcessLifecycleOwner.get().getLifecycle().addObserver(new DefaultLifecycleObserver() {
             @Override
@@ -113,6 +125,30 @@ public class MessageObserver {
         public void uncaughtException(Thread t, Throwable e) {
             Log.w(TAG, "*** Uncaught exception!");
             Log.w(TAG, e);
+        }
+    }
+
+    public static class ForegroundService extends Service {
+
+        @Override
+        public @Nullable
+        IBinder onBind(Intent intent) {
+            return null;
+        }
+
+        @Override
+        public int onStartCommand(Intent intent, int flags, int startId) {
+            super.onStartCommand(intent, flags, startId);
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), ApplicationContext.CHANNEL_ID);
+            builder.setContentTitle(getString(R.string.MessageRetrievalService));
+            builder.setContentText(getString(R.string.MessageRetrievalService_background_connection_enabled));
+            builder.setPriority(NotificationCompat.PRIORITY_MIN);
+            builder.setWhen(0);
+            builder.setSmallIcon(R.drawable.outline_cached_24);
+            startForeground(FOREGROUND_ID, builder.build());
+
+            return Service.START_STICKY;
         }
     }
 }

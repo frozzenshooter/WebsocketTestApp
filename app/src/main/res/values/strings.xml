@@ -9,4 +9,7 @@
     <string name="message_overview">Message overview</string>
     <string name="messages_empty_all">Delete messages</string>
     <string name="messages_refresh">Refresh messages</string>
+    <string name="MessageRetrievalService">Websocket test</string>
+    <string name="MessageRetrievalService_background_connection_enabled">Background connection enabled</string>
+    <string name="NotificationChannel">foreground_service</string>
 </resources>

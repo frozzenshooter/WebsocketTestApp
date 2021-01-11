@@ -1,10 +1,15 @@
 package com.garlic.websockettest;
 
 import android.app.Application;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 
@@ -14,10 +19,10 @@ import com.garlic.websockettest.messages.MessageObserver;
 /**
  * This class extends the @android.app.Application class to guarantee that all dependencies are initialized
  */
-public class ApplicationContext extends Application implements DefaultLifecycleObserver {
-
+public class ApplicationContext extends Application  {
 
     private static final String TAG = ApplicationContext.class.getSimpleName();
+    public final static String CHANNEL_ID = "foreground_channel";
     private static final Object LOCK = new Object();
     private static volatile MessageObserver messageObserver;
 
@@ -37,24 +42,12 @@ public class ApplicationContext extends Application implements DefaultLifecycleO
         long startTime = System.currentTimeMillis();
 
         super.onCreate();
-
+        this.createNotificationChannel();
         //TODO: use a threat to do this
         //initalize the observer for the websocket notifications
         this.initializeMessageRetrieval();
 
         Log.d(TAG, "onCreate() from ("+ TAG +") took " + (System.currentTimeMillis() - startTime) + " ms");
-    }
-
-    @Override
-    public void onStart(@NonNull LifecycleOwner owner) {
-        isAppVisible = true;
-        Log.i(TAG, "App is now visible.");
-    }
-
-    @Override
-    public void onStop(@NonNull LifecycleOwner owner) {
-        isAppVisible = false;
-        Log.i(TAG, "App is no longer visible.");
     }
 
     public void initializeMessageRetrieval(){
@@ -70,5 +63,13 @@ public class ApplicationContext extends Application implements DefaultLifecycleO
             }
         }
         return messageObserver;
+    }
+
+    private void createNotificationChannel(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            NotificationChannel serviceChannel = new NotificationChannel(CHANNEL_ID, "my_channel", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(serviceChannel);
+        }
     }
 }

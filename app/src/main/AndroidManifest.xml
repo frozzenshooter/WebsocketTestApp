@@ -3,6 +3,7 @@
     package="com.garlic.websockettest">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".ApplicationContext"
@@ -37,6 +38,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service android:enabled="true" android:name=".messages.MessageObserver$ForegroundService"/>
 
     </application>
 
