@@ -1,8 +1,14 @@
 package com.garlic.websockettest.websockets;
 
+import android.app.NotificationManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+
+import com.garlic.websockettest.ApplicationContext;
+import com.garlic.websockettest.R;
+import com.garlic.websockettest.messages.MessageHandler;
 
 import java.util.concurrent.TimeUnit;
 
@@ -22,10 +28,15 @@ public class WebSocketConnection extends WebSocketListener {
     private boolean connected;
 
     private WebSocket client;
+    private final ApplicationContext context;
+    private final MessageHandler messageHandler;
 
-    public WebSocketConnection(String uri){
+
+    public WebSocketConnection(String uri, ApplicationContext context){
         this.wsUri = uri;
         this.connected = false;
+        this.context = context;
+        this.messageHandler = new MessageHandler(context);
     }
 
     public synchronized void connect(){
@@ -74,6 +85,11 @@ public class WebSocketConnection extends WebSocketListener {
     @Override
     public synchronized void onMessage(WebSocket webSocket, String text) {
         Log.i(TAG, "onMessage("+text+")");
+        try{
+            this.messageHandler.addMessage(Double.valueOf(text));
+        } catch(NumberFormatException ex) {
+            Log.i(TAG, "onMessage("+text+") failed to parse to Double");
+        }
     }
 
     /** Invoked when a binary (type {@code 0x2}) message has been received. */
@@ -119,6 +135,4 @@ public class WebSocketConnection extends WebSocketListener {
             onClosed(webSocket, 1000, "OK");
         }
     }
-
-
 }

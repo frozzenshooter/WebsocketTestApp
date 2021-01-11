@@ -19,25 +19,28 @@ public class MessageHandler {
         messageDatabaseHelper = new MessageDatabaseHelper(context);
     }
 
-    public void addMessage(@NonNull long message){
+    public void addMessage(@NonNull Double message){
         SQLiteDatabase db = messageDatabaseHelper.getWritableDatabase();
+
         ContentValues newMessage = new ContentValues();
         Long timestamp = System.currentTimeMillis()/1000;
+
         newMessage.put(MessageDatabaseHelper.TIMESTAMP, timestamp);
         newMessage.put(MessageDatabaseHelper.MESSAGE, message);
-        db.insert(MessageDatabaseHelper.DB_NAME, null, newMessage);
+        db.insert(MessageDatabaseHelper.TABLE_NAME, null, newMessage);
+        db.close();
     }
 
-    public double resetMessages(){
+    public int resetMessages(){
         SQLiteDatabase db = messageDatabaseHelper.getWritableDatabase();
 
-        double amountOfRecords = 0;
+        int amountOfRecords = 0;
         try {
-            amountOfRecords = db.delete(MessageDatabaseHelper.DB_NAME, "1", null);
+            amountOfRecords = db.delete(MessageDatabaseHelper.TABLE_NAME, "1", null);
         }catch (Exception e){
             Log.w(TAG, e);
         }
-
+        db.close();
         return amountOfRecords;
     }
 

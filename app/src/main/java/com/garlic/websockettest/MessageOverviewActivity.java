@@ -52,7 +52,7 @@ public class MessageOverviewActivity extends AppCompatActivity {
     }
 
     private void deleteMessages(){
-        double amount = msgHandler.resetMessages();
+        int amount = msgHandler.resetMessages();
         this.toast("Deleted messages: "+amount);
     }
 

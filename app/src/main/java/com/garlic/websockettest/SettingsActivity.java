@@ -41,8 +41,8 @@ public class SettingsActivity extends AppCompatActivity {
         }else{
             //
             SharedPreferences sharedPref = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-            port = sharedPref.getString(PORT, "8888");
-            host = sharedPref.getString(HOST, "localhost");
+            port = sharedPref.getString(PORT, "8765");
+            host = sharedPref.getString(HOST, "192.168.2.100");
         }
 
         initSettings();

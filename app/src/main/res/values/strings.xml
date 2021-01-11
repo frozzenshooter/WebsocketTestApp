@@ -12,4 +12,6 @@
     <string name="MessageRetrievalService">Websocket test</string>
     <string name="MessageRetrievalService_background_connection_enabled">Background connection enabled</string>
     <string name="NotificationChannel">foreground_service</string>
+    <string name="websocket_failure">Websocket failure</string>
+    <string name="websocket_failure_messsage">The websocket connection failed:</string>
 </resources>

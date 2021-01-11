@@ -47,7 +47,7 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
         String uri = getUri(sharedPref);
 
         // Start thread which will use the websocket connection to receive messages
-        restartMessageRetrievalThread(uri);
+        restartMessageRetrievalThread(uri, (ApplicationContext) this.context);
 
         // Foreground service in order to secure that android won't shutdown the background process
         ContextCompat.startForegroundService(context, new Intent(context, MessageObserver.ForegroundService.class));
@@ -121,23 +121,23 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
         if(key.equalsIgnoreCase(SettingsActivity.HOST) || key.equalsIgnoreCase(SettingsActivity.PORT))
         {
             String uri = getUri(sharedPreferences);
-            restartMessageRetrievalThread(uri);
+            restartMessageRetrievalThread(uri, (ApplicationContext) this.context);
         }
     }
 
-    private void restartMessageRetrievalThread(String uri) {
+    private void restartMessageRetrievalThread(String uri, ApplicationContext context) {
         if(messageRetrievalThread != null){
             messageRetrievalThread.uri = uri;
             messageRetrievalThread.wasUpdated = true;
         }else{
-            this.messageRetrievalThread = new MessageRetrievalThread(uri);
+            this.messageRetrievalThread = new MessageRetrievalThread(uri, context);
             this.messageRetrievalThread.start();
         }
     }
 
     private String getUri(SharedPreferences sharedPref){
-        String port = sharedPref.getString(SettingsActivity.PORT, "8888");
-        String host = sharedPref.getString(SettingsActivity.HOST, "localhost");
+        String port = sharedPref.getString(SettingsActivity.PORT, "8765");
+        String host = sharedPref.getString(SettingsActivity.HOST, "192.168.2.100");
 
         //return "ws://192.168.2.100:8765";
         return "ws://"+host+":"+port;
@@ -149,11 +149,13 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
     private class MessageRetrievalThread extends Thread  implements Thread.UncaughtExceptionHandler{
         public volatile boolean wasUpdated;
         public volatile String uri;
+        public volatile ApplicationContext context;
 
-        MessageRetrievalThread(String uri) {
+        MessageRetrievalThread(String uri, ApplicationContext context) {
             super("MessageRetrievalService");
             setUncaughtExceptionHandler(this);
             this.wasUpdated = false;
+            this.context = context;
             this.uri = uri;
         }
 
@@ -165,7 +167,7 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
                 waitForConnectionPossible();
 
                 Log.i(TAG, "Making websocket connection....");
-                WebSocketConnection websocket = new WebSocketConnection(this.uri);
+                WebSocketConnection websocket = new WebSocketConnection(this.uri, context);
                 websocket.connect();
                 this.wasUpdated = false;
 

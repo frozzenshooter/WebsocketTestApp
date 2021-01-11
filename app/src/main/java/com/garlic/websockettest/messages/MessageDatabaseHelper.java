@@ -8,6 +8,7 @@ public class MessageDatabaseHelper extends SQLiteOpenHelper {
 
     // Metadata
     public static final String DB_NAME = "messages";
+    public static final String TABLE_NAME = "message_table";
     public static final int DB_VERSION = 1;
 
     // Columns
@@ -20,7 +21,10 @@ public class MessageDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db){
-        db.execSQL("CREATE TABLE DRINK (_id INTEGER PRIMARY KEY AUTOINCREMENT, " + MESSAGE + "NUMERIC, "+ TIMESTAMP + " NUMERIC );");
+        db.execSQL("CREATE TABLE "+TABLE_NAME+"("
+                + "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + MESSAGE + " NUMERIC, "
+                + TIMESTAMP + " NUMERIC );");
     }
 
     @Override
