@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.IBinder;
@@ -21,14 +22,17 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.garlic.websockettest.ApplicationContext;
 import com.garlic.websockettest.R;
+import com.garlic.websockettest.SettingsActivity;
+import com.garlic.websockettest.websockets.WebSocketConnection;
 
-public class MessageObserver {
+public class MessageObserver{
 
     public  static final  int FOREGROUND_ID = 313399;
 
     private static final String TAG = MessageObserver.class.getSimpleName();
     private final Application context;
     private boolean appVisible;
+
 
     public MessageObserver(@NonNull Application context){
 
@@ -37,8 +41,10 @@ public class MessageObserver {
         // Start thread which will use the websocket connection to receive messages
         new MessageRetrievalThread().start();
 
+        // Foreground service in order to secure that android won't shutdown the background process
         ContextCompat.startForegroundService(context, new Intent(context, MessageObserver.ForegroundService.class));
 
+        // This can be used to enable/disable the foreground service - a visible app won't close a background task
         ProcessLifecycleOwner.get().getLifecycle().addObserver(new DefaultLifecycleObserver() {
             @Override
             public void onStart(@NonNull LifecycleOwner owner) {
@@ -51,6 +57,8 @@ public class MessageObserver {
             }
         });
 
+        // Handling of network changes -> if the network is lost close the socket
+        // if the network is back on again reestablish the connection and start receiving
         context.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -76,6 +84,9 @@ public class MessageObserver {
         notifyAll();
     }
 
+    /**
+     * Waits until the device has established a network connection
+     */
     private synchronized void waitForConnectionPossible() {
         try {
             while (!hasNetwork()) wait();
@@ -84,6 +95,11 @@ public class MessageObserver {
         }
     }
 
+    /**
+     * Returns if the device has a network connection
+     *
+     * @return hasNetwork
+     */
     private synchronized boolean hasNetwork(){
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo   = connectivityManager.getActiveNetworkInfo();
@@ -91,6 +107,9 @@ public class MessageObserver {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
+    /**
+     * Thread to retrieve messages from the websocket
+     */
     private class MessageRetrievalThread extends Thread  implements Thread.UncaughtExceptionHandler{
 
         MessageRetrievalThread() {
@@ -101,20 +120,22 @@ public class MessageObserver {
         @Override
         public void run(){
 
-            while(true){
+            while (true) {
                 Log.i(TAG, "Waiting for websocket state change....");
                 waitForConnectionPossible();
 
                 Log.i(TAG, "Making websocket connection....");
+                WebSocketConnection websocket = new WebSocketConnection("ws://192.168.2.100:8765");
+                websocket.connect();
 
-                try{
-                    while(hasNetwork()){
-                        //TODO: get messages from websocket and setup job to handle it
+                try {
+                    while (hasNetwork()) {
+
                     }
-                }catch (Throwable e){
+                } catch (Throwable e) {
                     Log.w(TAG, e);
-                }finally {
-                    //TODO: Shutdown message handling
+                } finally {
+                   websocket.disconnect();
                 }
 
                 Log.i(TAG, "Looping...");
@@ -128,6 +149,9 @@ public class MessageObserver {
         }
     }
 
+    /**
+     * Foreground service which allows to run a background task, in this case the message retrieval, whom won't be terminated by the OS to reduce battery consumption
+     */
     public static class ForegroundService extends Service {
 
         @Override

@@ -18,6 +18,7 @@ import android.widget.Toast;
  */
 public class SettingsActivity extends AppCompatActivity {
 
+    // TODO: this should be in a central dependency file
     public final static String PORT = "PORT";
     public final static String HOST = "HOST";
 

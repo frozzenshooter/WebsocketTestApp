@@ -13,20 +13,21 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 
+import com.garlic.websockettest.messages.MessageHandler;
 import com.garlic.websockettest.messages.MessageObserver;
 
 
 /**
- * This class extends the @android.app.Application class to guarantee that all dependencies are initialized
+ * This class extends the {@android.app.Application} class to guarantee that all dependencies are initialized
  */
 public class ApplicationContext extends Application  {
 
     private static final String TAG = ApplicationContext.class.getSimpleName();
     public final static String CHANNEL_ID = "foreground_channel";
     private static final Object LOCK = new Object();
-    private static volatile MessageObserver messageObserver;
 
-    private volatile boolean isAppVisible;
+    private static volatile MessageObserver messageObserver;
+    private static volatile MessageHandler messageHandler;
 
     /**
      * Returns the ApplicationContext of the Application
@@ -40,10 +41,12 @@ public class ApplicationContext extends Application  {
     @Override
     public void onCreate() {
         long startTime = System.currentTimeMillis();
-
         super.onCreate();
+
+        // Needed to be able to display the foreground service
         this.createNotificationChannel();
-        //TODO: use a threat to do this
+
+        //TODO: probably better to use a threat to do this
         //initalize the observer for the websocket notifications
         this.initializeMessageRetrieval();
 
@@ -52,6 +55,7 @@ public class ApplicationContext extends Application  {
 
     public void initializeMessageRetrieval(){
         ApplicationContext.getMessageObserver(this);
+        ApplicationContext.getMessageHandler(this);
     }
 
     public static @NonNull MessageObserver getMessageObserver(@NonNull Application context) {
@@ -63,6 +67,17 @@ public class ApplicationContext extends Application  {
             }
         }
         return messageObserver;
+    }
+
+    public static @NonNull MessageHandler getMessageHandler(@NonNull Application context) {
+        if (messageHandler == null) {
+            synchronized (LOCK) {
+                if (messageHandler == null) {
+                    messageHandler = new MessageHandler(context);
+                }
+            }
+        }
+        return messageHandler;
     }
 
     private void createNotificationChannel(){
