@@ -30,7 +30,7 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
     public  static final  int FOREGROUND_ID = 313399;
 
     private static final String TAG = MessageObserver.class.getSimpleName();
-    private final Application context;
+    private final ApplicationContext context;
     private boolean appVisible;
     private boolean pauseConnection;
 
@@ -39,7 +39,7 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
 
     public MessageObserver(@NonNull Application context){
 
-        this.context = context;
+        this.context = (ApplicationContext) context;
 
         SharedPreferences sharedPref = context.getSharedPreferences(context.getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         sharedPref.registerOnSharedPreferenceChangeListener(this);
@@ -48,10 +48,13 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
         this.pauseConnection = sharedPref.getBoolean(SettingsActivity.PAUSE_CONNECTION, true);
 
         // Start thread which will use the websocket connection to receive messages
-        restartMessageRetrievalThread(uri, (ApplicationContext) this.context);
+        restartMessageRetrievalThread(uri, this.context);
 
         // Foreground service in order to secure that android won't shutdown the background process
-        ContextCompat.startForegroundService(context, new Intent(context, MessageObserver.ForegroundService.class));
+        Intent foregroundStartIntent = new Intent(context, MessageObserver.ForegroundService.class);
+        foregroundStartIntent.setAction(ForegroundService.START_FOREGROUND_SERVICE);
+
+        ContextCompat.startForegroundService(context, foregroundStartIntent);
 
         // This can be used to enable/disable the foreground service - a visible app won't close a background task
         ProcessLifecycleOwner.get().getLifecycle().addObserver(new DefaultLifecycleObserver() {
@@ -202,6 +205,9 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
      */
     public static class ForegroundService extends Service {
 
+        public static final String START_FOREGROUND_SERVICE = "START_FOREGROUND_SERVICE";
+        public static final String STOP_FOREGROUND_SERVICE = "STOP_FOREGROUND_SERVICE";
+
         @Override
         public @Nullable
         IBinder onBind(Intent intent) {
@@ -212,13 +218,23 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
         public int onStartCommand(Intent intent, int flags, int startId) {
             super.onStartCommand(intent, flags, startId);
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), ApplicationContext.CHANNEL_ID);
-            builder.setContentTitle(getString(R.string.MessageRetrievalService));
-            builder.setContentText(getString(R.string.MessageRetrievalService_background_connection_enabled));
-            builder.setPriority(NotificationCompat.PRIORITY_MIN);
-            builder.setWhen(0);
-            builder.setSmallIcon(R.drawable.outline_cached_24);
-            startForeground(FOREGROUND_ID, builder.build());
+            if (intent.getAction().equals(START_FOREGROUND_SERVICE)) {
+
+                ApplicationContext.isForegroundServiceRunning = true;
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), ApplicationContext.CHANNEL_ID);
+                builder.setContentTitle(getString(R.string.MessageRetrievalService));
+                builder.setContentText(getString(R.string.MessageRetrievalService_background_connection_enabled));
+                builder.setPriority(NotificationCompat.PRIORITY_MIN);
+                builder.setWhen(0);
+                builder.setSmallIcon(R.drawable.outline_cached_24);
+                startForeground(FOREGROUND_ID, builder.build());
+
+            }
+            else if (intent.getAction().equals( STOP_FOREGROUND_SERVICE)) {
+                ApplicationContext.isForegroundServiceRunning = false;
+                stopForeground(true);
+                stopSelfResult(startId);
+            }
 
             return Service.START_STICKY;
         }

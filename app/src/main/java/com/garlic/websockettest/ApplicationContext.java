@@ -34,6 +34,7 @@ public class ApplicationContext extends Application  {
     private static volatile MessageObserver messageObserver;
     private static volatile MessageHandler messageHandler;
     public static volatile ExecutorService executorService;
+    public static volatile boolean isForegroundServiceRunning;
 
     /**
      * Returns the ApplicationContext of the Application

@@ -4,8 +4,10 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -14,6 +16,8 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.garlic.websockettest.messages.MessageObserver;
 
 /**
  * This saves the setting in the sharded preferences, but this would be better done with the defaultSharedPreferences
@@ -123,6 +127,31 @@ public class SettingsActivity extends AppCompatActivity {
             default:
 
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void startForeGroundService(View view) {
+
+        ApplicationContext appContext = (ApplicationContext) getApplicationContext();
+
+        if(!ApplicationContext.isForegroundServiceRunning){
+            Intent foregroundStartIntent = new Intent(appContext, MessageObserver.ForegroundService.class);
+            foregroundStartIntent.setAction(MessageObserver.ForegroundService.START_FOREGROUND_SERVICE);
+
+            ContextCompat.startForegroundService(appContext, foregroundStartIntent);
+        }
+
+    }
+
+    public void stopForeGroundService(View view) {
+
+        ApplicationContext appContext = (ApplicationContext) getApplicationContext();
+
+        if(ApplicationContext.isForegroundServiceRunning) {
+            Intent foregroundStartIntent = new Intent(appContext, MessageObserver.ForegroundService.class);
+            foregroundStartIntent.setAction(MessageObserver.ForegroundService.STOP_FOREGROUND_SERVICE);
+
+            ContextCompat.startForegroundService(appContext, foregroundStartIntent);
         }
     }
 }
