@@ -3,12 +3,15 @@ package com.garlic.websockettest;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.garlic.websockettest.messages.MessageAdapter;
 import com.garlic.websockettest.messages.MessageHandler;
 
 public class MessageOverviewActivity extends AppCompatActivity {
@@ -22,9 +25,18 @@ public class MessageOverviewActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
+        if(actionBar!= null){
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
-        msgHandler = new MessageHandler(this.getApplicationContext());
+        RecyclerView recyclerView = findViewById(R.id.message_recycler);
+
+        msgHandler = ApplicationContext.getMessageHandler((ApplicationContext) getApplicationContext());
+        Double[] messages = msgHandler.getAllMessages();
+        MessageAdapter adapter = new MessageAdapter(messages);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(adapter);
     }
 
     @Override
@@ -54,11 +66,17 @@ public class MessageOverviewActivity extends AppCompatActivity {
     private void deleteMessages(){
         int amount = msgHandler.resetMessages();
         this.toast("Deleted messages: "+amount);
+        this.refreshMessages();
     }
 
     private void refreshMessages(){
+        RecyclerView recyclerView = findViewById(R.id.message_recycler);
 
-        this.toast("Refresh");
+        msgHandler = ApplicationContext.getMessageHandler((ApplicationContext) getApplicationContext());
+        Double[] messages = msgHandler.getAllMessages();
+
+        MessageAdapter adapter = new MessageAdapter(messages);
+        recyclerView.setAdapter(adapter);
     }
 
     @Override

@@ -2,13 +2,17 @@ package com.garlic.websockettest.messages;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
 import com.garlic.websockettest.ApplicationContext;
+
+import java.util.ArrayList;
 
 public class MessageHandler {
 
@@ -42,6 +46,27 @@ public class MessageHandler {
         }
         db.close();
         return amountOfRecords;
+    }
+
+    public Double[] getAllMessages(){
+
+        ArrayList<Double> messages = new ArrayList<Double>();
+        try{
+            SQLiteDatabase db = messageDatabaseHelper.getReadableDatabase();
+            Cursor cursor = db.query(MessageDatabaseHelper.TABLE_NAME, new String[] {MessageDatabaseHelper.MESSAGE}, null, null, null, null, null);
+
+            if (cursor.moveToFirst()) {
+                while (!cursor.isAfterLast()) {
+                    Double message = cursor.getDouble(cursor.getColumnIndex(MessageDatabaseHelper.MESSAGE));
+                    messages.add(message);
+                    cursor.moveToNext();
+                }
+            }
+        }catch(Exception e){
+            Log.w(TAG, "Error", e);
+        }
+
+        return messages.toArray(new Double[0]);
     }
 
 }
