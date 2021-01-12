@@ -52,7 +52,13 @@ public class MessageAdapter  extends RecyclerView.Adapter<MessageAdapter.ViewHol
         ConstraintLayout view = holder.view;
 
         TextView textView = (TextView) view.findViewById(R.id.message_view_text_view);
-        textView.setText(String.valueOf(messages[position]));
+
+        long timeInMs = Math.round(messages[position]*1000);
+        Timestamp ts = new Timestamp(timeInMs);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        String timeStampString  = dateFormat.format(ts);
+        textView.setText(timeStampString);
+
 
     }
 }
