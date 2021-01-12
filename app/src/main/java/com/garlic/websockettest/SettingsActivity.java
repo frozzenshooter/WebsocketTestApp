@@ -2,6 +2,7 @@ package com.garlic.websockettest;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Context;
@@ -10,6 +11,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,9 +23,11 @@ public class SettingsActivity extends AppCompatActivity {
     // TODO: this should be in a central dependency file
     public final static String PORT = "PORT";
     public final static String HOST = "HOST";
+    public final static String PAUSE_CONNECTION = "PAUSE_CONNECTION";
 
     private String port;
     private String host;
+    private boolean pauseConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,11 +42,13 @@ public class SettingsActivity extends AppCompatActivity {
             // If not saved changes were made (e.g. smartphone switches to landscape mode)
             port = savedInstanceState.getString(PORT);
             host = savedInstanceState.getString(HOST);
+            pauseConnection = savedInstanceState.getBoolean(PAUSE_CONNECTION);
         }else{
             //
             SharedPreferences sharedPref = getSharedPreferences(getString(R.string.preference_file_key), Context.MODE_PRIVATE);
             port = sharedPref.getString(PORT, "8765");
             host = sharedPref.getString(HOST, "192.168.2.100");
+            pauseConnection = sharedPref.getBoolean(PAUSE_CONNECTION, true);
         }
 
         initSettings();
@@ -55,6 +61,7 @@ public class SettingsActivity extends AppCompatActivity {
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putString(PORT, port);
         savedInstanceState.putString(HOST, host);
+        savedInstanceState.putBoolean(PAUSE_CONNECTION, pauseConnection);
     }
 
     /**
@@ -70,9 +77,12 @@ public class SettingsActivity extends AppCompatActivity {
 
         editor.putString(PORT, port);
         editor.putString(HOST, host);
+        editor.putBoolean(PAUSE_CONNECTION, pauseConnection);
         editor.apply();
 
-        CharSequence text = "Settings saved (ws://"+host+":"+port+")";
+        String pauseConnectionString = pauseConnection ? "paused" : "active";
+
+        CharSequence text = "Settings saved (ws://"+host+":"+port+" - "+ pauseConnectionString;
         int duration = Toast.LENGTH_SHORT;
         Toast toast = Toast.makeText(this, text, duration);
         toast.show();
@@ -88,6 +98,9 @@ public class SettingsActivity extends AppCompatActivity {
 
         TextView hostTextView = (TextView) findViewById(R.id.editTextHost);
         hostTextView.setText(host);
+
+        Switch pauseConnectionSwitch = (Switch) findViewById(R.id.pause_connection_switch);
+        pauseConnectionSwitch.setChecked(pauseConnection);
     }
 
     private void updateSettings() {
@@ -96,6 +109,9 @@ public class SettingsActivity extends AppCompatActivity {
 
         TextView hostTextView = (TextView) findViewById(R.id.editTextHost);
         host = hostTextView.getText().toString();
+
+        Switch pauseConnectionSwitch = (Switch) findViewById(R.id.pause_connection_switch);
+        pauseConnection = pauseConnectionSwitch.isChecked();
     }
 
     @Override

@@ -69,11 +69,24 @@
         android:id="@+id/save_settings_button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
+        android:onClick="saveSettings"
         android:text="@string/saveSettings"
+        app:layout_constraintEnd_toEndOf="@+id/editTextPort"
+        app:layout_constraintHorizontal_bias="0.46"
+        app:layout_constraintStart_toStartOf="@+id/portTextView"
+        app:layout_constraintTop_toBottomOf="@+id/pause_connection_switch" />
+
+    <Switch
+        android:id="@+id/pause_connection_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/pause_connection"
         app:layout_constraintEnd_toEndOf="@+id/editTextPort"
         app:layout_constraintStart_toStartOf="@+id/portTextView"
         app:layout_constraintTop_toBottomOf="@+id/editTextPort"
-        android:onClick="saveSettings"/>
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
 </LinearLayout>

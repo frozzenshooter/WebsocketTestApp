@@ -32,7 +32,7 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
     private static final String TAG = MessageObserver.class.getSimpleName();
     private final Application context;
     private boolean appVisible;
-    private volatile boolean networkLost;
+    private boolean pauseConnection;
 
     private MessageRetrievalThread messageRetrievalThread = null;
 
@@ -45,6 +45,7 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
         sharedPref.registerOnSharedPreferenceChangeListener(this);
 
         String uri = getUri(sharedPref);
+        this.pauseConnection = sharedPref.getBoolean(SettingsActivity.PAUSE_CONNECTION, true);
 
         // Start thread which will use the websocket connection to receive messages
         restartMessageRetrievalThread(uri, (ApplicationContext) this.context);
@@ -103,25 +104,29 @@ public class MessageObserver implements SharedPreferences.OnSharedPreferenceChan
         }
     }
 
+
     /**
      * Returns if the device has a network connection
      *
      * @return hasNetwork
      */
     private synchronized boolean hasNetwork(){
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivityManager = (ConnectivityManager) this.context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo   = connectivityManager.getActiveNetworkInfo();
 
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected() && !this.pauseConnection;
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-
-        if(key.equalsIgnoreCase(SettingsActivity.HOST) || key.equalsIgnoreCase(SettingsActivity.PORT))
-        {
-            String uri = getUri(sharedPreferences);
-            restartMessageRetrievalThread(uri, (ApplicationContext) this.context);
+        synchronized (MessageObserver.this){
+            if(key.equalsIgnoreCase(SettingsActivity.HOST) || key.equalsIgnoreCase(SettingsActivity.PORT) || key.equalsIgnoreCase(SettingsActivity.PAUSE_CONNECTION))
+            {
+                String uri = getUri(sharedPreferences);
+                this.pauseConnection = sharedPreferences.getBoolean(SettingsActivity.PAUSE_CONNECTION, true);
+                restartMessageRetrievalThread(uri, (ApplicationContext) this.context);
+            }
+            MessageObserver.this.notifyAll();
         }
     }
 
